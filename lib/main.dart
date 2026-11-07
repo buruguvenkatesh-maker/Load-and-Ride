@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'models.dart';
+import 'registration_screen.dart';
+import 'trip_editor.dart';
 
 void main() => runApp(const RideloadApp());
 
@@ -224,33 +226,14 @@ class _MarketplaceState extends State<Marketplace> {
 
   Future<void> postDetails() async {
     if (!validRoute()) return;
-    final vehicle = TextEditingController(), capacity = TextEditingController(), price = TextEditingController(), via = TextEditingController();
-    final form = GlobalKey<FormState>();
-    DateTime date = DateTime.now().add(const Duration(days: 1));
-    await showDialog<void>(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, update) => AlertDialog(
-      title: const Text('Demo vehicle trip'), content: SingleChildScrollView(child: Form(key: form, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextFormField(controller: vehicle, decoration: const InputDecoration(labelText: 'Vehicle model and registration'), validator: (s) => s == null || s.trim().isEmpty ? 'Enter vehicle details' : null),
-        const SizedBox(height: 12), TextFormField(controller: via, decoration: const InputDecoration(labelText: 'Intermediate stops (comma separated)')),
-        const SizedBox(height: 12), TextFormField(controller: capacity, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: service == Service.goods ? 'Available capacity (kg)' : 'Available seats'), validator: positive),
-        const SizedBox(height: 12), TextFormField(controller: price, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Fare (INR)'), validator: positive),
-        TextButton(onPressed: () async {
-          final chosen = await showDatePicker(context: ctx, initialDate: date, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
-          if (chosen == null || !ctx.mounted) return;
-          final time = await showTimePicker(context: ctx, initialTime: TimeOfDay.fromDateTime(date));
-          if (time != null) update(() => date = DateTime(chosen.year, chosen.month, chosen.day, time.hour, time.minute));
-        }, child: Text('Departure: ${date.toString().substring(0, 16)}')),
-      ]))), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        FilledButton(onPressed: () {
-          if (!form.currentState!.validate()) return;
-          if (!date.isAfter(DateTime.now())) { message('Choose a future departure.'); return; }
-          final stops = [pickup.text.trim(), ...via.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty), drop.text.trim()];
-          if (stops.map(locationKey).toSet().length != stops.length) { message('Each stop must be unique.'); return; }
-          setState(() { store.trips.add(Trip(id: 'demo-${DateTime.now().microsecondsSinceEpoch}', service: service, stops: stops, owner: '${store.name} • Demo owner', vehicle: vehicle.text.trim(), capacity: int.parse(capacity.text.trim()), price: int.parse(price.text.trim()), departure: date)); results = null; tab = 0; });
-          Navigator.pop(ctx); message('Demo trip posted locally.');
-        }, child: const Text('Post demo trip'))])));
-    vehicle.dispose(); capacity.dispose(); price.dispose(); via.dispose();
+    FocusScope.of(context).unfocus();
+    final trip = await Navigator.of(context).push<Trip>(MaterialPageRoute(
+      builder: (_) => TripEditor(pickup: pickup.text.trim(), drop: drop.text.trim(),
+        service: service, owner: store.name)));
+    if (!mounted || trip == null) return;
+    setState(() { store.trips.add(trip); results = null; tab = 0; });
+    message('Demo trip posted locally.');
   }
-  String? positive(String? text) => (int.tryParse(text?.trim() ?? '') ?? 0) > 0 ? null : 'Enter a positive whole number';
 
   List<Widget> bookings() => [heading('Bookings & trip requests'),
     const Text('Local simulations only. No real reservation or owner notification.'),
@@ -266,17 +249,13 @@ class _MarketplaceState extends State<Marketplace> {
     FilledButton(onPressed: register, child: const Text('Edit registration')),
   ];
   Future<void> register() async {
-    final name = TextEditingController(text: store.name), phone = TextEditingController(text: store.phone);
-    var role = store.role;
-    final key = GlobalKey<FormState>();
-    await showDialog<void>(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, update) => AlertDialog(
-      title: Text('$role registration'), content: SingleChildScrollView(child: Form(key: key, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        DropdownButtonFormField<String>(initialValue: role, items: [for (final r in ['Customer', 'Vehicle Owner']) DropdownMenuItem(value: r, child: Text(r))], onChanged: (r) => update(() => role = r!)),
-        const SizedBox(height: 12), TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Full name'), validator: (s) => s == null || s.trim().length < 2 ? 'Enter your name' : null),
-        const SizedBox(height: 12), TextFormField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Indian mobile number', prefixText: '+91 '), validator: (s) => RegExp(r'^[6-9][0-9]{9}$').hasMatch(s?.trim() ?? '') ? null : 'Enter a valid 10-digit mobile number'),
-        const Text('Demo only • No SMS will be sent.'),
-      ]))), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        FilledButton(onPressed: () { if (!key.currentState!.validate()) return; setState(() { store.name = name.text.trim(); store.phone = phone.text.trim(); store.role = role; }); Navigator.pop(ctx); }, child: const Text('Save demo profile'))])));
-    name.dispose(); phone.dispose();
+    FocusScope.of(context).unfocus();
+    final profile = await Navigator.of(context).push<DemoProfile>(MaterialPageRoute(
+      builder: (_) => RegistrationScreen(initial: DemoProfile(
+        name: store.name, phone: store.phone, role: store.role))));
+    if (!mounted || profile == null) return;
+    setState(() {
+      store.name = profile.name; store.phone = profile.phone; store.role = profile.role;
+    });
   }
 }
