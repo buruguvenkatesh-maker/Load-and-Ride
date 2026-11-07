@@ -134,7 +134,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Post trip'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Add vehicle and departure'));
+    await tester.scrollUntilVisible(find.text('Add vehicle and departure'), 150,
+      scrollable: find.byType(Scrollable).first);
     await tester.tap(find.text('Add vehicle and departure'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const ValueKey('trip-vehicle')), 'Cancelled edit');
@@ -146,7 +147,8 @@ void main() {
     await tester.enterText(find.byKey(const ValueKey('trip-vehicle')), 'Demo Swift TS 09 XY 0001');
     await tester.enterText(find.byKey(const ValueKey('trip-capacity')), '2');
     await tester.enterText(find.byKey(const ValueKey('trip-fare')), '300');
-    await tester.ensureVisible(find.text('Post demo trip'));
+    await tester.scrollUntilVisible(find.text('Post demo trip'), 150,
+      scrollable: find.byType(Scrollable).first);
     await tester.tap(find.text('Post demo trip'));
     await tester.pumpAndSettle();
     expect(find.text('Demo trip posted locally.'), findsOneWidget);
