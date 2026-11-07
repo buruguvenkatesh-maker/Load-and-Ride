@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'brand_logo.dart';
 import 'models.dart';
 import 'registration_screen.dart';
 import 'trip_editor.dart';
@@ -53,7 +54,7 @@ class _MarketplaceState extends State<Marketplace> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(titleSpacing: 20,
       title: const Row(children: [
-        Icon(Icons.route_rounded, color: Color(0xFF4F46E5), size: 28),
+        BrandLogo(),
         SizedBox(width: 8),
         Flexible(child: Text('Load and Ride', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800))),
       ]), actions: [

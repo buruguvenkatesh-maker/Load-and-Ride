@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'brand_logo.dart';
 
 class DemoProfile {
   const DemoProfile({required this.name, required this.phone, required this.role});
@@ -49,7 +50,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     body: SafeArea(child: Form(key: formKey, child: ListView(
       padding: const EdgeInsets.all(24), keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
-        const Icon(Icons.account_circle_rounded, size: 64, color: Color(0xFF4F46E5)),
+        const Center(child: BrandLogo(size: 64)),
         const SizedBox(height: 12),
         Text('$role registration', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 12),
