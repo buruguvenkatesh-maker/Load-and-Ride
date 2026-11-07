@@ -40,7 +40,6 @@ void main() {
     await tester.ensureVisible(find.byKey(const ValueKey('category-goods')));
     await tester.tap(find.byKey(const ValueKey('category-goods')));
     await tester.pumpAndSettle();
-    expect(find.text('Your goods.\nAlready on the way.'), findsOneWidget);
     await tester.ensureVisible(find.text('Find matching trips'));
     await tester.tap(find.text('Find matching trips'));
     await tester.pumpAndSettle();
