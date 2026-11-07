@@ -1,0 +1,50 @@
+name: Build Rideload APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Android build tools
+        run: sdkmanager 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Restore standard Gradle launcher
+        # Flutter supplies its standard wrapper jar; native project files remain ours.
+        run: |
+          flutter create --platforms=android --project-name=rideload_bootstrap "$RUNNER_TEMP/rideload_bootstrap"
+          cp "$RUNNER_TEMP/rideload_bootstrap/android/gradlew" android/gradlew
+          cp "$RUNNER_TEMP/rideload_bootstrap/android/gradle/wrapper/gradle-wrapper.jar" android/gradle/wrapper/gradle-wrapper.jar
+          chmod +x android/gradlew
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Tests
+        run: flutter test
+      - name: Build personal testing APK
+        run: flutter build apk --debug
+      - name: Upload Rideload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rideload-APK
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
