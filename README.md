@@ -9,11 +9,11 @@ location permission, Maps key, SMS, payment, or real vehicle is required.
 1. Put this project's contents at the root of your GitHub repository. The workflow
    must be at `.github/workflows/build-apk.yml`. If uploading from a ZIP, enable
    hidden files so `.github` is included.
-2. In GitHub on your phone, open **Actions → Build Rideload APK → Run workflow**.
+2. In GitHub on your phone, open **Actions → Build Load and Ride APK → Run workflow**.
    If the button is hidden, use your browser's desktop-site option. GitHub requires
    the workflow on the default branch for manual dispatch. Pull requests also build.
-3. Open the successful run, then under **Artifacts** download **Rideload-APK**.
-4. Extract the ZIP and install `app-debug.apk`. Android may ask you to permit
+3. Open the successful run, then under **Artifacts** download **Load-and-Ride-APK**.
+4. Extract the ZIP and install `Load-and-Ride.apk`. Android may ask you to permit
    installation from your browser or file manager. This is a debug-signed APK for
    personal testing, not a Play Store release. Artifacts expire after 14 days.
 5. If a run fails, open its failed step and give the log to Codex for repair.
@@ -26,7 +26,8 @@ APK may require uninstalling the earlier app before installation.
 
 ## Try the prototype
 
-- Search Hyderabad → Thorrur in Goods Transport or Carpool.
+- Carpool opens first. Use the colored service cards to switch to Goods Transport.
+- Search Hyderabad → Thorrur in Carpool or Goods Transport.
 - Try Hayathnagar → Thorrur to see forward intermediate-stop matching.
 - Reverse routes do not match. Unknown routes show an honest empty state.
 - Open vehicle details, request a demo booking, then use the booking menu to

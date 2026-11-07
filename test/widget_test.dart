@@ -10,6 +10,11 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const RideloadApp());
     expect(find.text('Load and Ride'), findsOneWidget);
+    expect(find.text('Share a ride.\nEnjoy the journey.'), findsOneWidget);
+    expect(find.textContaining('Maruti Ertiga'), findsOneWidget);
+    expect(find.textContaining('Tata Ace'), findsNothing);
+    expect(tester.getTopLeft(find.text('Carpool')).dx,
+      lessThan(tester.getTopLeft(find.text('Goods Transport')).dx));
     expect(find.textContaining('No live vehicles'), findsOneWidget);
     await tester.tap(find.text('Find matching trips'));
     await tester.pumpAndSettle();
@@ -24,6 +29,25 @@ void main() {
     await tester.tap(find.text('Simulate Accepted'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Demo status: Accepted'), findsOneWidget);
+  });
+  testWidgets('phone layout supports Carpool first and switching to goods', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const RideloadApp());
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.byKey(const ValueKey('category-goods')));
+    await tester.tap(find.byKey(const ValueKey('category-goods')));
+    await tester.pumpAndSettle();
+    expect(find.text('Your goods.\nAlready on the way.'), findsOneWidget);
+    await tester.ensureVisible(find.text('Find matching trips'));
+    await tester.tap(find.text('Find matching trips'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.textContaining('Tata Ace'), 200,
+      scrollable: find.byType(Scrollable).first);
+    expect(find.textContaining('Tata Ace'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
   testWidgets('empty location validation and owner gate', (tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
