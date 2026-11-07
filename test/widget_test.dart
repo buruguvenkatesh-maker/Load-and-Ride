@@ -1,0 +1,161 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:rideload/main.dart';
+
+void main() {
+  testWidgets('search and request remain explicitly simulated', (tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const RideloadApp());
+    expect(find.text('Load and Ride'), findsOneWidget);
+    expect(find.text('Share a ride.\nEnjoy the journey.'), findsOneWidget);
+    expect(find.textContaining('Maruti Ertiga'), findsOneWidget);
+    expect(find.textContaining('Tata Ace'), findsNothing);
+    expect(tester.getTopLeft(find.text('Carpool')).dx,
+      lessThan(tester.getTopLeft(find.text('Goods Transport')).dx));
+    expect(find.textContaining('No live vehicles'), findsOneWidget);
+    await tester.tap(find.text('Find matching trips'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Request demo booking'));
+    await tester.tap(find.text('Request demo booking'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bookings'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Demo status: Requested'), findsOneWidget);
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Simulate Accepted'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Demo status: Accepted'), findsOneWidget);
+  });
+  testWidgets('phone layout supports Carpool first and switching to goods', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const RideloadApp());
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.byKey(const ValueKey('category-goods')));
+    await tester.tap(find.byKey(const ValueKey('category-goods')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Find matching trips'));
+    await tester.tap(find.text('Find matching trips'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.textContaining('Tata Ace'), 200,
+      scrollable: find.byType(Scrollable).first);
+    expect(find.textContaining('Tata Ace'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('empty location validation and owner gate', (tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const RideloadApp());
+    await tester.enterText(find.byType(TextField).first, '');
+    await tester.tap(find.text('Find matching trips'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter different pickup and drop locations.'), findsOneWidget);
+    await tester.tap(find.text('Post trip'));
+    await tester.pumpAndSettle();
+    expect(find.text('Vehicle Owner registration'), findsOneWidget);
+  });
+  testWidgets('registration validates, changes role, saves and reopens without errors', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const RideloadApp());
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expect(find.text('Customer registration'), findsOneWidget);
+    await tester.enterText(find.byKey(const ValueKey('registration-name')), '');
+    await tester.ensureVisible(find.text('Save demo profile'));
+    await tester.tap(find.text('Save demo profile'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter your name'), findsOneWidget);
+    expect(find.text('Enter a valid 10-digit mobile number'), findsOneWidget);
+    await tester.enterText(find.byKey(const ValueKey('registration-name')), 'Test Customer');
+    await tester.enterText(find.byKey(const ValueKey('registration-phone')), '9876543210');
+    await tester.ensureVisible(find.byKey(const ValueKey('registration-role')));
+    await tester.tap(find.byKey(const ValueKey('registration-role')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Vehicle Owner').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Vehicle Owner registration'), findsOneWidget);
+    await tester.ensureVisible(find.text('Save demo profile'));
+    await tester.tap(find.text('Save demo profile'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expect(find.text('Vehicle Owner registration'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Test Customer'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('registration-phone')));
+    await tester.pump();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Load and Ride'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('registration-role')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Customer').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save demo profile'));
+    await tester.tap(find.text('Save demo profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    expect(find.text('Test Customer'), findsOneWidget);
+    expect(find.textContaining('Customer\n9876543210'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('owner can cancel and reopen trip editor then post with focused fields', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const RideloadApp());
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('registration-phone')), '9876543210');
+    await tester.ensureVisible(find.byKey(const ValueKey('registration-role')));
+    await tester.tap(find.byKey(const ValueKey('registration-role')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Vehicle Owner').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save demo profile'));
+    await tester.tap(find.text('Save demo profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Post trip'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Add vehicle and departure'), 150,
+      scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Add vehicle and departure'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('trip-vehicle')), 'Cancelled edit');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Add vehicle and departure'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('trip-vehicle')), 'Demo Swift TS 09 XY 0001');
+    await tester.enterText(find.byKey(const ValueKey('trip-capacity')), '2');
+    await tester.enterText(find.byKey(const ValueKey('trip-fare')), '300');
+    await tester.scrollUntilVisible(find.text('Post demo trip'), 150,
+      scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Post demo trip'));
+    await tester.pumpAndSettle();
+    expect(find.text('Demo trip posted locally.'), findsOneWidget);
+    await tester.scrollUntilVisible(find.textContaining('Demo Swift'), 200,
+      scrollable: find.byType(Scrollable).first);
+    expect(find.textContaining('Demo Swift'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+}
